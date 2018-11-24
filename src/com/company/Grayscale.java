@@ -12,6 +12,7 @@ public class Grayscale{
         File f = null;
 
         Scanner in = new Scanner(System.in);
+        System.out.println("Type the name of image to convert to grayscale");
         String fileName = in.nextLine();
 
         //read image
@@ -51,6 +52,8 @@ public class Grayscale{
             String[] fName = fileName.split("\\.");
             f = new File("Output_"+ fName[0] + ".bmp");
             ImageIO.write(img, "bmp", f);
+
+            System.out.println("Output_"+ fName[0] + ".bmp");
         }catch(IOException e){
             System.out.println(e);
         }
