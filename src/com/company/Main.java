@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
-    Image image;
+
 
 
     public static void main(String[] args) {
@@ -48,14 +48,15 @@ class ImageComponent extends JComponent {
 
 
     public ImageComponent() {
+
+        int directionFrom = 0;
+        int colorFrom = 0;
         // Получаем изображения.
         try {
             Scanner in = new Scanner(System.in);
-            System.out.println("Type the name of image to apply Sobel filter");
+            System.out.println("Type the name of image to apply Bug filter");
             fileName = in.nextLine();
-            System.out.println("Enter the sharpness of Sobel filter (0 - 100)");
-            sharpness = in.nextInt();
-            in.nextLine();
+
 
             image = ImageIO.read(new File(fileName));
 
@@ -63,7 +64,7 @@ class ImageComponent extends JComponent {
             int width = image.getWidth();
             int height = image.getHeight();
 
-            imageOut = new BufferedImage(width - 2, height - 2, image.getType());
+            imageOut = new BufferedImage(width - 1, height - 1, image.getType());
 
             maskX = new int[3][3];
             maskY = new int[3][3];
@@ -99,54 +100,128 @@ class ImageComponent extends JComponent {
             Gx = new int[width - 2][height - 2];
             Gy = new int[width - 2][height - 2];
 
+            int bgColor = 0;
+            int mainColor = 255;
+            int flag = 1;
+            int rgbOutOld = 0;
             for (int y = 1; y < height - 1; y++) {
                 for (int x = 1; x < width - 1; x++) {
 
+                    int p = image.getRGB(x, y);
+                    int rgb = p & 0xff;
 
-                    int curPixelSumX = 0;
-                    int curPixelSumY = 0;
-                    for (int i = 0; i < 3; i++) {
-                        for (int j = 0; j < 3; j++) {
-                            int p = image.getRGB(x + (i - 1), y + (i - 1));
-                            int rgb = p & 0xff;
+                    p = imageOut.getRGB(x, y);
+                    int rgbOutCur = p & 0xff;
 
-                            curPixelSumX += maskX[i][j] * rgb;
-                            curPixelSumY += maskY[i][j] * rgb;
+
+
+
+                    if (rgb == 255 && flag == 1) {
+
+                        int curX = x;
+                        int curY = y;
+
+                        int curCol = rgb;
+                        int iter = 0;
+
+                        //imageOut.setRGB(curX, curY, (0xFF << 24) | (mainColor << 16) | (mainColor << 8) | mainColor);
+                        directionFrom = 0;
+                        while (true) {
+                            int dx = 0;
+                            int dy = 0;
+
+                            System.out.println(curX + " ---- " + curY);
+
+                            p = image.getRGB(curX, curY);
+                            curCol = p & 0xff;
+
+                            switch (directionFrom) {
+                                case 0:
+                                    if (curCol != bgColor) {
+                                        dy--;
+                                        directionFrom = 1;
+                                    } else if ((curCol == bgColor)) {
+                                        dy++;
+                                        directionFrom = 3;
+                                    }
+                                    break;
+                                case 1:
+                                    if (curCol != bgColor) {
+                                        dx--;
+                                        directionFrom = 2;
+                                    } else if ((curCol == bgColor)) {
+                                        dx++;
+                                        directionFrom = 0;
+                                    }
+                                    break;
+                                case 2:
+                                    if (curCol != bgColor) {
+                                        dy++;
+                                        directionFrom = 3;
+                                    } else if ((curCol == bgColor)) {
+                                        dy--;
+                                        directionFrom = 1;
+                                    }
+                                    break;
+                                case 3:
+                                    if (curCol != bgColor) {
+                                        dx++;
+                                        directionFrom = 0;
+                                    } else if ((curCol == bgColor)) {
+                                        dx--;
+                                        directionFrom = 2;
+                                    }
+                                    break;
+                            }
+                            //int colChecked = (0xFF << 24) | (tempColor << 16) | (tempColor << 8) | tempColor;
+                            //int colBoarder = (0xFF << 24) | (mainColor << 16) | (mainColor << 8) | mainColor;
+                            //imageOut.setRGB(curX, curY, colBoarder);
+
+                            curX += dx;
+                            curY += dy;
+
+                            int colBoarder = (0xFF << 24) | (mainColor << 16) | (mainColor << 8) | mainColor;
+                            imageOut.setRGB(curX, curY, colBoarder);
+
+                            if (curX == x && curY == y) {
+                                System.out.println(x + "  " + y);
+                            }
+
+                            if (curX == x && curY == y && iter > 4) {
+                                break;
+                            }
+                            iter++;
+
                         }
+                    } else if (rgb == 0) {
+                        // imageOut.setRGB(x, y, 0);
                     }
 
-                    Gx[x - 1][y - 1] = curPixelSumX;
-                    //System.out.println(curPixelSumX);
-                    Gy[x - 1][y - 1] = curPixelSumY;
+                    p = imageOut.getRGB(x, y);
+                    rgbOutCur = p & 0xff;
+
+                    if (rgbOutCur == mainColor && rgbOutOld == bgColor ) {
+                        flag = 0;
+                    }
+                    if (rgbOutCur == bgColor && rgbOutOld == mainColor && rgb == bgColor) {
+                        flag = 1;
+                    }
+
+
+                    rgbOutOld = rgbOutCur;
 
 
                 }
             }
 
 
-            for (int y = 1; y < imageOut.getHeight() - 1; y++) {
-                for (int x = 1; x < imageOut.getWidth() - 1; x++) {
-
-                    double G = Math.sqrt((Gx[x][y] * Gx[x][y]) + (Gy[x][y] * Gy[x][y]));
-                    int rgb = (int) G;
-                    if (rgb < 255/100*sharpness){
-                        rgb =0;
-                    }
-
-                    int p = (0xFF << 24) | (rgb << 16) | (rgb << 8) | rgb;
-
-
-                    imageOut.setRGB(x, y, p);
-                }
-            }
-
-            try{
+            try {
                 String[] fName = fileName.split("\\.");
-                File f = new File("Sobel_"+ fName[0] + ".bmp");
+                File f = new File("Bug_" + fName[0] + ".bmp");
                 ImageIO.write(imageOut, "bmp", f);
 
-                System.out.println("Sobel("+sharpness +"$)_"+ fName[0] + ".bmp");
-            }catch(IOException e){
+                System.out.println("Sobel(" + sharpness + "$)_" + fName[0] + ".bmp");
+            } catch (IOException e) {
                 System.out.println(e);
             }
 
