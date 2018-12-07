@@ -11,7 +11,6 @@ import java.util.Scanner;
 public class Main {
 
 
-
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -25,7 +24,7 @@ public class Main {
 }
 
 class ImageFrame extends JFrame {
-    public ImageFrame() {
+    ImageFrame() {
         setTitle("ImageTest");
         setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
@@ -35,27 +34,21 @@ class ImageFrame extends JFrame {
         add(component);
     }
 
-    public static final int DEFAULT_WIDTH = 800;
-    public static final int DEFAULT_HEIGHT = 600;
+    private static final int DEFAULT_WIDTH = 800;
+    private static final int DEFAULT_HEIGHT = 600;
 }
 
 class ImageComponent extends JComponent {
 
-    int[][] maskX, maskY;
-    int[][] Gx, Gy;
-    String fileName;
-    int sharpness;
 
+    ImageComponent() {
 
-    public ImageComponent() {
-
-        int directionFrom = 0;
-        int colorFrom = 0;
+        int directionFrom;
         // Получаем изображения.
         try {
             Scanner in = new Scanner(System.in);
             System.out.println("Type the name of image to apply Bug filter");
-            fileName = in.nextLine();
+            String fileName = in.nextLine();
 
 
             image = ImageIO.read(new File(fileName));
@@ -66,55 +59,19 @@ class ImageComponent extends JComponent {
 
             imageOut = new BufferedImage(width - 1, height - 1, image.getType());
 
-            maskX = new int[3][3];
-            maskY = new int[3][3];
-            /*maskX[0][0] = -1; maskX[0][1] = -2; maskX[0][2] = -1;
-            maskX[1][0] = 0;  maskX[1][1] = 0;  maskX[1][2] = 0;
-            maskX[2][0] = 1;  maskX[2][1] = 2;  maskX[2][2] = 1;
-
-            maskY[0][0] = -1; maskY[0][1] = 0; maskY[0][2] = 1;
-            maskY[1][0] = -2;  maskY[1][1] = 0;  maskY[1][2] = 2;
-            maskY[2][0] = -1;  maskY[2][1] = 0;  maskY[2][2] = 1;*/
-
-            maskX[0][0] = -1;
-            maskX[0][1] = -2;
-            maskX[0][2] = -1;
-            maskX[1][0] = 0;
-            maskX[1][1] = 0;
-            maskX[1][2] = 0;
-            maskX[2][0] = 1;
-            maskX[2][1] = 2;
-            maskX[2][2] = 1;
-
-            maskY[0][0] = -1;
-            maskY[0][1] = 0;
-            maskY[0][2] = 1;
-            maskY[1][0] = -2;
-            maskY[1][1] = 0;
-            maskY[1][2] = 2;
-            maskY[2][0] = -1;
-            maskY[2][1] = 0;
-            maskY[2][2] = 1;
-
-
-            Gx = new int[width - 2][height - 2];
-            Gy = new int[width - 2][height - 2];
 
             int bgColor = 0;
             int mainColor = 255;
             int flag = 1;
             int rgbOutOld = 0;
+            int rgbOutCur;
             for (int y = 1; y < height - 1; y++) {
                 for (int x = 1; x < width - 1; x++) {
 
                     int p = image.getRGB(x, y);
                     int rgb = p & 0xff;
 
-                    p = imageOut.getRGB(x, y);
-                    int rgbOutCur = p & 0xff;
-
-
-
+                    rgbOutCur = imageOut.getRGB(x, y) & 0xff;
 
                     if (rgb == 255 && flag == 1) {
 
@@ -124,7 +81,7 @@ class ImageComponent extends JComponent {
                         int curCol = rgb;
                         int iter = 0;
 
-                        //imageOut.setRGB(curX, curY, (0xFF << 24) | (mainColor << 16) | (mainColor << 8) | mainColor);
+
                         directionFrom = 0;
                         while (true) {
                             int dx = 0;
@@ -140,7 +97,7 @@ class ImageComponent extends JComponent {
                                     if (curCol != bgColor) {
                                         dy--;
                                         directionFrom = 1;
-                                    } else if ((curCol == bgColor)) {
+                                    } else {
                                         dy++;
                                         directionFrom = 3;
                                     }
@@ -149,7 +106,7 @@ class ImageComponent extends JComponent {
                                     if (curCol != bgColor) {
                                         dx--;
                                         directionFrom = 2;
-                                    } else if ((curCol == bgColor)) {
+                                    } else {
                                         dx++;
                                         directionFrom = 0;
                                     }
@@ -158,7 +115,7 @@ class ImageComponent extends JComponent {
                                     if (curCol != bgColor) {
                                         dy++;
                                         directionFrom = 3;
-                                    } else if ((curCol == bgColor)) {
+                                    } else {
                                         dy--;
                                         directionFrom = 1;
                                     }
@@ -167,15 +124,13 @@ class ImageComponent extends JComponent {
                                     if (curCol != bgColor) {
                                         dx++;
                                         directionFrom = 0;
-                                    } else if ((curCol == bgColor)) {
+                                    } else {
                                         dx--;
                                         directionFrom = 2;
                                     }
                                     break;
                             }
-                            //int colChecked = (0xFF << 24) | (tempColor << 16) | (tempColor << 8) | tempColor;
-                            //int colBoarder = (0xFF << 24) | (mainColor << 16) | (mainColor << 8) | mainColor;
-                            //imageOut.setRGB(curX, curY, colBoarder);
+
 
                             curX += dx;
                             curY += dy;
@@ -193,14 +148,13 @@ class ImageComponent extends JComponent {
                             iter++;
 
                         }
-                    } else if (rgb == 0) {
-                        // imageOut.setRGB(x, y, 0);
                     }
+
 
                     p = imageOut.getRGB(x, y);
                     rgbOutCur = p & 0xff;
 
-                    if (rgbOutCur == mainColor && rgbOutOld == bgColor ) {
+                    if (rgbOutCur == mainColor && rgbOutOld == bgColor) {
                         flag = 0;
                     }
                     if (rgbOutCur == bgColor && rgbOutOld == mainColor && rgb == bgColor) {
@@ -220,7 +174,7 @@ class ImageComponent extends JComponent {
                 File f = new File("Bug_" + fName[0] + ".bmp");
                 ImageIO.write(imageOut, "bmp", f);
 
-                System.out.println("Sobel(" + sharpness + "$)_" + fName[0] + ".bmp");
+
             } catch (IOException e) {
                 System.out.println(e);
             }
@@ -240,15 +194,6 @@ class ImageComponent extends JComponent {
         g.drawImage(imageOut, 0, 0, null);
 
 
-        //g.drawImage(q);
-
-        // Многократный вывод изображения в панели.
-
-      /*  for(int i = 0; i * imageWidth <= getWidth(); i++)
-            for(int j = 0; j * imageHeight <= getHeight(); j++)
-                if(i + j > 0)
-                    g.copyArea(0, 0, imageWidth, imageHeight, i * imageWidth, j * imageHeight);
-                    */
     }
 
     private BufferedImage image;
